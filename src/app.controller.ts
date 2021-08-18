@@ -40,7 +40,6 @@ export class AppController {
   @EventPattern('BULK_DELETE_DOCTOR_PROFILES')
   async BulkDeleteDoctorProfiles(@Payload() idLists: number[]){
 
-    console.log(idLists)
     return await this.appService.BulkDeleteDoctorProfiles(idLists)
   } 
 }
