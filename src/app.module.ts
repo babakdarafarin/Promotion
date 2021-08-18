@@ -3,18 +3,14 @@ import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ElasticsearchModule } from '@nestjs/elasticsearch'
-import { join } from 'path';
-require('dotenv').config();
+
+const ENV = process.env.NODE_ENV;
 
 @Module({
   imports: [
     ConfigModule.forRoot({
 
-      envFilePath: process.env.APP_ENV === 'dev' ?
-      join(process.cwd(), 'environment', 'dev.env') :
-      join(process.cwd(), 'environment', 'prod.env'),
-
-
+      envFilePath: !ENV ? '.env' : `Environments/.env.${ENV}`,
       isGlobal:true
     }),
     ElasticsearchModule.register({
