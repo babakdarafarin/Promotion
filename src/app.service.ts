@@ -15,59 +15,55 @@ export class AppService {
   }
 
   async CreateDoctorIndex() {
-    try{
-      return await this.elasticsearchService.indices.create({
-        index: 'doctors',
-        body: {
-            "settings": {
-                "index.max_ngram_diff" : 17,
-                "analysis": {
-                    "filter": {
-                        "autocomplete_filter": {                                
-                            "type": "nGram",
-                            "min_gram": 3,
-                            "max_gram": 20
-                        }
-                    },
-                    "analyzer": {
-                        "autocomplete": {
-                            "type": "custom",
-                            "tokenizer": "standard",
-                            "filter":[
-                                "lowercase", "autocomplete_filter"
-                            ]
-                        }
-                    },
-                }
-            },
-            "mappings":{
-                "properties":{
-                    "id": {
-                        "type":"text",
-                        "search_analyzer":"standard"
-                    },
-                    "firstname": {
-                        "type":"text",
-                        "analyzer":"autocomplete", 
-                        "search_analyzer":"standard"
-                    },
-                    "lastname": {
-                    "type":"text",
-                    "analyzer":"autocomplete", 
-                    "search_analyzer":"standard"
-                    },
-                    "about": {
-                        "type":"text",
-                        "analyzer":"autocomplete", 
-                        "search_analyzer":"standard"
-                    }
-               }
-            }
-        }
-      })
-    } catch(error){
-        throw new RpcException(error)
-    }
+    return await this.elasticsearchService.indices.create({
+      index: 'doctors',
+      body: {
+          "settings": {
+              "index.max_ngram_diff" : 17,
+              "analysis": {
+                  "filter": {
+                      "autocomplete_filter": {                                
+                          "type": "nGram",
+                          "min_gram": 3,
+                          "max_gram": 20
+                      }
+                  },
+                  "analyzer": {
+                      "autocomplete": {
+                          "type": "custom",
+                          "tokenizer": "standard",
+                          "filter":[
+                              "lowercase", "autocomplete_filter"
+                          ]
+                      }
+                  },
+              }
+          },
+          "mappings":{
+              "properties":{
+                  "id": {
+                      "type":"text",
+                      "search_analyzer":"standard"
+                  },
+                  "firstname": {
+                      "type":"text",
+                      "analyzer":"autocomplete", 
+                      "search_analyzer":"standard"
+                  },
+                  "lastname": {
+                  "type":"text",
+                  "analyzer":"autocomplete", 
+                  "search_analyzer":"standard"
+                  },
+                  "about": {
+                      "type":"text",
+                      "analyzer":"autocomplete", 
+                      "search_analyzer":"standard"
+                  }
+              }
+          }
+      }
+    })
   }
 
   async BulkCreateDoctorProfiles(input : ProfileDto[]) {
