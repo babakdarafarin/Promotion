@@ -9,8 +9,8 @@ export class AppService {
     private readonly elasticsearchService: ElasticsearchService
   ) {
         this.elasticsearchService.ping({},{requestTimeout: 3000})
-        .then((res) => {console.log('ELK db connected!')})
-        .catch((err) => {throw new Error(err)})
+        
+        console.log('ELK db connected!')
   }
 
   async CreateDoctorIndex() {  
@@ -25,6 +25,7 @@ export class AppService {
         index: 'doctors',
         body: {
             "settings": {
+                "index.blocks.write": true,
                 "index.max_ngram_diff" : 17,
                 "analysis": {
                     "filter": {
@@ -150,9 +151,7 @@ export class AppService {
   }
 
   async DeleteIndex(index: string){
-  return await this.elasticsearchService.indices.delete({index: index})
-  .then(res => ({status: 'success', data: res}))
-  .catch(err => { throw new Error('Failed to bulk delete data'); });
+    return await this.elasticsearchService.indices.delete({index: index})
   }
 
   async BulkDeleteDoctorProfiles(idsList : number[]){
@@ -160,17 +159,15 @@ export class AppService {
 
     console.log(idsList)
     for(const id in idsList){
-      await this.elasticsearchService.delete_by_query({
+      await this.elasticsearchService.deleteByQuery({
         
         index: 'doctors',
         body: {
-          body: {
             "query": { 
                 "match": 
-                { "id":  id} 
+                { 'id':  id} 
             }
           }
-        }
       })
     }
   }
