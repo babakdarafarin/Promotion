@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ElasticsearchService } from '@nestjs/elasticsearch';
 import { ProfileDto } from './Dtos/profile.dto';
 import { SearchResult, SearchResultDto } from './Dtos/search-result.dto';
+import { CustomResponse } from './Response/custom-response';
 
 @Injectable()
 export class AppService {
@@ -18,14 +19,18 @@ export class AppService {
     const indexExistence = await this.elasticsearchService.indices.exists({index: 'doctors'})
     if(indexExistence.body)
     {
-      //return it exists!
+      return new CustomResponse(
+        'Index Already Exists!',
+        false
+      )
     }
     else{
-      return await this.elasticsearchService.indices.create({
+      await this.elasticsearchService.indices.create({
         index: 'doctors',
         body: {
             "settings": {
-                "index.blocks.write": true,
+                //"index.blocks.write": false,
+                //"index.blocks.read_only_allow_delete": false,
                 "index.max_ngram_diff" : 17,
                 "analysis": {
                     "filter": {
@@ -71,6 +76,11 @@ export class AppService {
             }
         }
       })
+
+      return new CustomResponse(
+        'Index Created!',
+        true
+      )
     }
   }
 
@@ -84,7 +94,7 @@ export class AppService {
     }
     else
     {
-      const existingIds = await this.FindByIds('doctors', 0, 10000)
+      const existingIds = await this.GetAllIds('doctors', 0, 10000)
     
       //deleting duplicates
       let profilesToAdd = [] as ProfileDto[]
@@ -154,11 +164,9 @@ export class AppService {
     return await this.elasticsearchService.indices.delete({index: index})
   }
 
-  async BulkDeleteDoctorProfiles(idsList : number[]){
+  async BulkDeleteDoctorProfiles(idsList : string[]){
   
-
-    console.log(idsList)
-    for(const id in idsList){
+    for(const id of idsList){
       await this.elasticsearchService.deleteByQuery({
         
         index: 'doctors',
@@ -231,7 +239,7 @@ export class AppService {
     return resultsByAbouts
   }
 
-  async FindByIds(index : string, from: number | 0, size: number | 100){
+  async GetAllIds(index : string, from: number | 0, size: number | 100){
     let res = await this.elasticsearchService.search({
       index: index,
       body: {
