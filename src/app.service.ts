@@ -3,15 +3,21 @@ import { ElasticsearchService } from '@nestjs/elasticsearch';
 import { ProfileDto } from './Dtos/profile.dto';
 import { SearchResult, SearchResultDto } from './Dtos/search-result.dto';
 import { CustomResponse } from './Response/custom-response';
+import { ConfigService } from '@nestjs/config'
+
+// var AWS = require('aws-sdk');
+
 
 @Injectable()
 export class AppService {
   constructor(
-    private readonly elasticsearchService: ElasticsearchService
+    private readonly elasticsearchService: ElasticsearchService,
+    private configService : ConfigService
   ) {
-        this.elasticsearchService.ping({},{requestTimeout: 3000})
         
-        console.log('ELK db connected!')
+        this.elasticsearchService.ping({},{requestTimeout: 3000}).then(() => {
+          console.log(this.configService.get('NODE_ENV') +  ' db connected!')
+        })
   }
 
   async CreateDoctorIndex() {  
@@ -156,6 +162,20 @@ export class AppService {
 
     results.resultsByNames = await this.FindByNames(index, q, from, size)
     results.resultsByAbouts = await this.FindByAbouts(index, q, from, size)
+
+    
+    //or using elastic.Client from ('elasticsearch')
+
+    // var client = new Client({
+    //     cloud: {
+    //         id: 'DoctorSearchEngine:dXMtd2VzdDEuZ2NwLmNsb3VkLmVzLmlvJDZkNmNmZDVjZDQyOTRjYmFiNzM3YTI2M2Y3NTVjZDJmJGIwZWM5MTNlY2Y3YzQ1ZDQ5YWMyZGNlZjdkYzQ4MGY4'
+    //     },
+    //     auth: {
+    //         username: "elastic",
+    //         password: "7sMQEDQPcCwLwwUvZVxe7ZIt",
+    //     },
+    // })
+    // client.ping({},{requestTimeout: 3000}).then(() => {console.log('connected!')})
     
     return results
   }

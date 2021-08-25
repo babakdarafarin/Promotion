@@ -1,4 +1,4 @@
-import { Controller, HttpStatus, Res } from '@nestjs/common';
+import { Controller, Res } from '@nestjs/common';
 import { EventPattern, Payload } from '@nestjs/microservices';
 import { AppService } from './app.service';
 import { ProfileDto } from './Dtos/profile.dto';
