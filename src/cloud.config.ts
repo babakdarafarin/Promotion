@@ -1,14 +1,23 @@
-  import { Injectable } from "@nestjs/common";
+  import { ClientOptions } from "@elastic/elasticsearch";
+import { Injectable } from "@nestjs/common";
   import { ConfigService } from '@nestjs/config'
+import { ElasticsearchOptionsFactory } from "@nestjs/elasticsearch";
   import { ClientProvider, ClientsModuleOptionsFactory } from "@nestjs/microservices";
 
   @Injectable()
-  export class CloudConfig implements ClientsModuleOptionsFactory{
+  export class CloudConfig implements ElasticsearchOptionsFactory{
       constructor(private configService : ConfigService){}
-      
-      
-      createClientOptions(): ClientProvider | Promise<ClientProvider> {
-        return this.configService.get('connectionInformation')
+    
+    createElasticsearchOptions(): ClientOptions | Promise<ClientOptions> {
+      //change to config.get TODO
+      if(process.env.NODE_ENV == 'production')
+      {
+        return this.configService.get('cloudConnectionInformation')
       }
+      else
+      {
+        return this.configService.get('localConnectionInformation')
+      }
+    }
   }
 

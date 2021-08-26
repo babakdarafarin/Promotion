@@ -1,22 +1,22 @@
-require('dotenv').config();
+require('dotenv').config(); //delete env usage, TODO
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { ExceptionFilter } from '../Filters/RPCExceptionFilter';
-const argv = require('yargs-parser')(process.argv.slice(2))
 
 async function bootstrap() {
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(AppModule, {
     transport: Transport.RMQ,
     options: {
-      urls: [process.env.RMQ_URL],
-      queue: process.env.RMQ_QUEUE,
+      urls: [process.env.RMQ_URL], //delete use config service TODO
+      queue: process.env.RMQ_QUEUE, //delete
       queueOptions: {
         durable: false
       },
     },
   });
-  
+
+  console.log(process.argv)
 
   app.useGlobalFilters(new ExceptionFilter());
   

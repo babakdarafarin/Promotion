@@ -20,7 +20,7 @@ export class AppService {
           console.log('\nError!\nCannot connect to ELK server on ' + this.configService.get('NODE_ENV') + ' environment.\nReason: ' + error + '\n\n')})
   }
 
-  async CreateDoctorIndex() {  
+  async CreateDoctorIndex() : Promise<CustomResponse> {  
     
     const indexExistence = await this.elasticsearchService.indices.exists({index: 'doctors'})
     if(indexExistence.body)
@@ -90,7 +90,7 @@ export class AppService {
     }
   }
 
-  async BulkCreateDoctorProfiles(profiles : ProfileDto[]) {
+  async BulkCreateDoctorProfiles(profiles : ProfileDto[]) : Promise<CustomResponse> {
 
     const indexExistence = await this.elasticsearchService.indices.exists({index: 'doctors'})
     if(!indexExistence.body)
@@ -133,7 +133,7 @@ export class AppService {
     }
   }
 
-  async BulkUpdateDoctorProfiles(inputs : ProfileDto[]){
+  async BulkUpdateDoctorProfiles(inputs : ProfileDto[]) : Promise<CustomResponse> {
 
   //move for loop to the painless part TODO
   const indexExistence = await this.elasticsearchService.indices.exists({index: 'doctors'})
@@ -175,7 +175,7 @@ export class AppService {
     }  
   }
 
-  async SearchData(index : string, q: string, from: number | 0, size: number | 100) {
+  async SearchData(index : string, q: string, from: number | 0, size: number | 100) : Promise<CustomResponse> {
     const indexExistence = await this.elasticsearchService.indices.exists({index: 'doctors'})
     if(!indexExistence.body)
     {
@@ -203,7 +203,7 @@ export class AppService {
     }
   }
 
-  async DeleteIndex(index: string){
+  async DeleteIndex(index: string) : Promise<CustomResponse> {
     const indexExistence = await this.elasticsearchService.indices.exists({index: 'doctors'})
     if(!indexExistence.body)
     {
@@ -222,7 +222,7 @@ export class AppService {
     }
   }
 
-  async BulkDeleteDoctorProfiles(idsList : string[]){
+  async BulkDeleteDoctorProfiles(idsList : string[]) : Promise<CustomResponse> {
     const indexExistence = await this.elasticsearchService.indices.exists({index: 'doctors'})
     if(!indexExistence.body)
     {
@@ -252,7 +252,7 @@ export class AppService {
     }
   }
 
-  private async FindByNames(index : string, q: string, from: number | 0, size: number | 100){
+  private async FindByNames(index : string, q: string, from: number | 0, size: number | 100) : Promise<any> {
     let res = await this.elasticsearchService.search({
       index: index,
       body: {
@@ -282,7 +282,7 @@ export class AppService {
     return resultsByNames
   }
 
-  private async FindByAbouts(index : string, q: string, from: number | 0, size: number | 100){
+  private async FindByAbouts(index : string, q: string, from: number | 0, size: number | 100) : Promise<any> {
     let res = await this.elasticsearchService.search({
       index: index,
       body: {
@@ -311,7 +311,7 @@ export class AppService {
     return resultsByAbouts
   }
 
-  private async GetAllIds(index : string, from: number | 0, size: number | 100){
+  private async GetAllIds(index : string, from: number | 0, size: number | 100) : Promise<any> {
     let res = await this.elasticsearchService.search({
       index: index,
       body: {

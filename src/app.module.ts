@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ElasticsearchModule } from '@nestjs/elasticsearch'
@@ -16,18 +16,11 @@ const ENV = process.env.NODE_ENV;
       isGlobal:true,
       load: [config]
     }),
-    ElasticsearchModule.register
-      ({        
-        node: process.env.ELK_NODE,
-        cloud: {
-          id: process.env.ELK_CLOUD_ID
-        },
-        auth: {
-            username: process.env.ELK_CLOUD_USERNAME,
-            password: process.env.ELK_CLOUD_PASSWORD,
-        },
-      }),
-    ],
+    ElasticsearchModule.registerAsync({
+      imports: [ConfigModule],
+      useClass: CloudConfig,
+      inject: [ConfigService],
+    })],
   controllers: [AppController],
   providers: [AppService],
 })
