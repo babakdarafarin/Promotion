@@ -8,6 +8,7 @@ import { CloudConfig } from './cloud.config'
 
 const ENV = process.env.NODE_ENV;
 
+//inject config service and change process.env to config class TODO
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -19,11 +20,11 @@ const ENV = process.env.NODE_ENV;
       ({        
         node: process.env.ELK_NODE,
         cloud: {
-          id: 'DoctorSearchEngine:dXMtd2VzdDEuZ2NwLmNsb3VkLmVzLmlvJDZkNmNmZDVjZDQyOTRjYmFiNzM3YTI2M2Y3NTVjZDJmJGIwZWM5MTNlY2Y3YzQ1ZDQ5YWMyZGNlZjdkYzQ4MGY4'
+          id: process.env.ELK_CLOUD_ID
         },
         auth: {
-            username: "elastic",
-            password: "7sMQEDQPcCwLwwUvZVxe7ZIt",
+            username: process.env.ELK_CLOUD_USERNAME,
+            password: process.env.ELK_CLOUD_PASSWORD,
         },
       }),
     ],

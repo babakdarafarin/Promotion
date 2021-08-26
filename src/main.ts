@@ -3,7 +3,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { ExceptionFilter } from '../Filters/RPCExceptionFilter';
-
+const argv = require('yargs-parser')(process.argv.slice(2))
 
 async function bootstrap() {
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(AppModule, {
@@ -16,6 +16,7 @@ async function bootstrap() {
       },
     },
   });
+  
 
   app.useGlobalFilters(new ExceptionFilter());
   

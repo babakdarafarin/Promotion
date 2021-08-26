@@ -1,31 +1,22 @@
-import { Controller, Res } from '@nestjs/common';
+import { Controller } from '@nestjs/common';
 import { EventPattern, Payload } from '@nestjs/microservices';
 import { AppService } from './app.service';
 import { ProfileDto } from './Dtos/profile.dto';
 import { SearchDto } from './Dtos/search.dto';
-import { Response } from 'express';
 
 @Controller()
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
   @EventPattern('CREATE_DOCTOR_INDEX')
-  async CreateDoctorIndex(@Res() res: Response){
+  async CreateDoctorIndex(){
     return await this.appService.CreateDoctorIndex()
-
-    // if(result.wasSuccessful){
-    //   res.status(HttpStatus.CREATED).
-    //   .send();
-    // }
-    // else{
-    //   res.status(HttpStatus.BAD_REQUEST).send()
-    // }
   }
   
   @EventPattern('BULK_CREATE_DOCTOR_PROFILES')
   async BulkCreateDoctorProfiles(@Payload() profiles: ProfileDto[]){
 
-    await this.appService.BulkCreateDoctorProfiles(profiles)
+    return await this.appService.BulkCreateDoctorProfiles(profiles)
   }
 
   @EventPattern('BULK_UPDATE_DOCTOR_PROFILES')
@@ -49,7 +40,7 @@ export class AppController {
   @EventPattern('DELETE_INDEX')
   async DeleteIndex(@Payload() index: string){
 
-    await this.appService.DeleteIndex(index)
+    return await this.appService.DeleteIndex(index)
   }
 
   @EventPattern('BULK_DELETE_DOCTOR_PROFILES')

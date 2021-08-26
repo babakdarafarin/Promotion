@@ -5,19 +5,19 @@ import { SearchResult, SearchResultDto } from './Dtos/search-result.dto';
 import { CustomResponse } from './Response/custom-response';
 import { ConfigService } from '@nestjs/config'
 
-// var AWS = require('aws-sdk');
-
-
 @Injectable()
 export class AppService {
   constructor(
     private readonly elasticsearchService: ElasticsearchService,
     private configService : ConfigService
   ) {
-        
-        this.elasticsearchService.ping({},{requestTimeout: 3000}).then(() => {
-          console.log(this.configService.get('NODE_ENV') +  ' db connected!')
+        //change to async TODO   
+        this.elasticsearchService.ping({},{requestTimeout: 3000})
+        .then(() => {
+          console.log('\n' + this.configService.get('NODE_ENV') +  ' db connected!\n')
         })
+        .catch((error) => {
+          console.log('\nError!\nCannot connect to ELK server on ' + this.configService.get('NODE_ENV') + ' environment.\nReason: ' + error + '\n\n')})
   }
 
   async CreateDoctorIndex() {  
@@ -27,7 +27,7 @@ export class AppService {
     {
       return new CustomResponse(
         'Index Already Exists!',
-        false
+        true
       )
     }
     else{
@@ -90,13 +90,15 @@ export class AppService {
     }
   }
 
-  //return profiles that were not added
   async BulkCreateDoctorProfiles(profiles : ProfileDto[]) {
 
     const indexExistence = await this.elasticsearchService.indices.exists({index: 'doctors'})
     if(!indexExistence.body)
     {
-      //return index does not exist
+      return new CustomResponse(
+        'Index Does Not Exist!',
+        false
+      )
     }
     else
     {
@@ -123,13 +125,27 @@ export class AppService {
               }
           })
       })
+
+      return new CustomResponse(
+        'Profiles Inserted! (if duplicates existed, those were not inserted)',
+        true
+      )
     }
   }
 
   async BulkUpdateDoctorProfiles(inputs : ProfileDto[]){
 
-  //move for loop to the painless part
-    for(const profile of inputs){
+  //move for loop to the painless part TODO
+  const indexExistence = await this.elasticsearchService.indices.exists({index: 'doctors'})
+    if(!indexExistence.body)
+    {
+      return new CustomResponse(
+        'Index Does Not Exist!',
+        false
+      )
+    }
+    else{
+      for(const profile of inputs){
         await this.elasticsearchService.updateByQuery(
             {
             index: "doctors",  
@@ -150,57 +166,93 @@ export class AppService {
                 },
             }
         })
-    }
+      }
+
+      return new CustomResponse(
+        'Profiles Were Updated!',
+        true
+      )
+    }  
   }
 
   async SearchData(index : string, q: string, from: number | 0, size: number | 100) {
+    const indexExistence = await this.elasticsearchService.indices.exists({index: 'doctors'})
+    if(!indexExistence.body)
+    {
+      return new CustomResponse(
+        'Index Does Not Exist!',
+        false
+      )
+    }
+    else{
+      let results : SearchResultDto = {
+        resultsByNames : {} as SearchResult[],
+        resultsByAbouts : {} as SearchResult[]
+      }
 
-  let results : SearchResultDto = {
-      resultsByNames : {} as SearchResult[],
-      resultsByAbouts : {} as SearchResult[]
-  }
+      results.resultsByNames = await this.FindByNames(index, q, from, size)
+      results.resultsByAbouts = await this.FindByAbouts(index, q, from, size)
+      
+      let res = new CustomResponse(
+        'Search Completed!',
+        true,
+      )
+      res.body = results
 
-    results.resultsByNames = await this.FindByNames(index, q, from, size)
-    results.resultsByAbouts = await this.FindByAbouts(index, q, from, size)
-
-    
-    //or using elastic.Client from ('elasticsearch')
-
-    // var client = new Client({
-    //     cloud: {
-    //         id: 'DoctorSearchEngine:dXMtd2VzdDEuZ2NwLmNsb3VkLmVzLmlvJDZkNmNmZDVjZDQyOTRjYmFiNzM3YTI2M2Y3NTVjZDJmJGIwZWM5MTNlY2Y3YzQ1ZDQ5YWMyZGNlZjdkYzQ4MGY4'
-    //     },
-    //     auth: {
-    //         username: "elastic",
-    //         password: "7sMQEDQPcCwLwwUvZVxe7ZIt",
-    //     },
-    // })
-    // client.ping({},{requestTimeout: 3000}).then(() => {console.log('connected!')})
-    
-    return results
-  }
-
-  async DeleteIndex(index: string){
-    return await this.elasticsearchService.indices.delete({index: index})
-  }
-
-  async BulkDeleteDoctorProfiles(idsList : string[]){
-  
-    for(const id of idsList){
-      await this.elasticsearchService.deleteByQuery({
-        
-        index: 'doctors',
-        body: {
-            "query": { 
-                "match": 
-                { 'id':  id} 
-            }
-          }
-      })
+      return res
     }
   }
 
-  async FindByNames(index : string, q: string, from: number | 0, size: number | 100){
+  async DeleteIndex(index: string){
+    const indexExistence = await this.elasticsearchService.indices.exists({index: 'doctors'})
+    if(!indexExistence.body)
+    {
+      return new CustomResponse(
+        'Index Does Not Exist!',
+        false
+      )
+    }
+    else{
+      await this.elasticsearchService.indices.delete({index: index})
+
+      return new CustomResponse(
+        'Index Deleted!',
+        true
+      )
+    }
+  }
+
+  async BulkDeleteDoctorProfiles(idsList : string[]){
+    const indexExistence = await this.elasticsearchService.indices.exists({index: 'doctors'})
+    if(!indexExistence.body)
+    {
+      return new CustomResponse(
+        'Index Does Not Exist!',
+        false
+      )
+    }
+    else{
+      for(const id of idsList){
+        await this.elasticsearchService.deleteByQuery({
+          
+          index: 'doctors',
+          body: {
+              "query": { 
+                  "match": 
+                  { 'id':  id} 
+              }
+            }
+        })
+      }
+
+      return new CustomResponse(
+        'Profiles Deleted!',
+        true
+      )      
+    }
+  }
+
+  private async FindByNames(index : string, q: string, from: number | 0, size: number | 100){
     let res = await this.elasticsearchService.search({
       index: index,
       body: {
@@ -230,7 +282,7 @@ export class AppService {
     return resultsByNames
   }
 
-  async FindByAbouts(index : string, q: string, from: number | 0, size: number | 100){
+  private async FindByAbouts(index : string, q: string, from: number | 0, size: number | 100){
     let res = await this.elasticsearchService.search({
       index: index,
       body: {
@@ -259,7 +311,7 @@ export class AppService {
     return resultsByAbouts
   }
 
-  async GetAllIds(index : string, from: number | 0, size: number | 100){
+  private async GetAllIds(index : string, from: number | 0, size: number | 100){
     let res = await this.elasticsearchService.search({
       index: index,
       body: {

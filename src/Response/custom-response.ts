@@ -6,4 +6,5 @@ export class CustomResponse{
 
     public message : string
     public wasSuccessful : boolean
+    public body : any
 }
