@@ -13,7 +13,6 @@ let ENV = process.argv[2] ? process.argv[2] : process.env.NODE_ENV
   imports: [
     ConfigModule.forRoot({
       envFilePath: !ENV ? '.env' : `Environments/.env.${ENV}`,
-      //envFilePath: `Environments/.env.${ENV}`,
       isGlobal:true,
       load: [config]
     }),

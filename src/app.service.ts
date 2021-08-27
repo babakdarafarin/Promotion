@@ -3,13 +3,11 @@ import { ElasticsearchService } from '@nestjs/elasticsearch';
 import { ProfileDto } from './Dtos/profile.dto';
 import { SearchResult, SearchResultDto } from './Dtos/search-result.dto';
 import { CustomResponse } from './Response/custom-response';
-import { ConfigService } from '@nestjs/config'
 
 @Injectable()
 export class AppService {
   constructor(
     private readonly elasticsearchService: ElasticsearchService,
-    private configService : ConfigService
   ) {
         let ENV = process.argv[2] ? process.argv[2] : process.env.NODE_ENV
         //change to async await TODO    process.argv[2].toString() 

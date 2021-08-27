@@ -3,7 +3,6 @@ import { Injectable } from "@nestjs/common";
 import { ConfigService } from '@nestjs/config'
 import { ElasticsearchOptionsFactory } from "@nestjs/elasticsearch";
 
-
 @Injectable()
 export class CloudConfig implements ElasticsearchOptionsFactory{
     constructor(private configService : ConfigService){}
