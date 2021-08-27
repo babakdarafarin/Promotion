@@ -16,8 +16,6 @@ async function bootstrap() {
     },
   });
 
-  console.log(process.argv)
-
   app.useGlobalFilters(new ExceptionFilter());
   
   app.listen()

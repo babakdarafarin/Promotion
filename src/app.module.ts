@@ -6,7 +6,9 @@ import { ElasticsearchModule } from '@nestjs/elasticsearch'
 import { config } from './config';
 import { CloudConfig } from './cloud.config'
 
-const ENV = process.env.NODE_ENV;
+const ENV = process.argv[2]
+
+console.log(ENV)
 
 //inject config service and change process.env to config class TODO
 @Module({
