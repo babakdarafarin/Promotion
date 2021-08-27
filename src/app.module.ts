@@ -8,8 +8,6 @@ import { CloudConfig } from './cloud.config'
 
 const ENV = process.argv[2]
 
-console.log(ENV)
-
 //inject config service and change process.env to config class TODO
 @Module({
   imports: [
