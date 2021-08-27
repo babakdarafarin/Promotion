@@ -11,13 +11,16 @@ export class AppService {
     private readonly elasticsearchService: ElasticsearchService,
     private configService : ConfigService
   ) {
-        //change to async await TODO   
+        let ENV = process.argv[2] ? process.argv[2] : process.env.NODE_ENV
+        //change to async await TODO    process.argv[2].toString() 
+        //this.configService.get('NODE_ENV')
         this.elasticsearchService.ping({},{requestTimeout: 3000})
         .then(() => {
-          console.log('\n' + this.configService.get('NODE_ENV') +  ' db connected!\n')
+          
+          console.log('\n' + ENV +  ' db connected!\n')
         })
         .catch((error) => {
-          console.log('\nError!\nCannot connect to ELK server on ' + this.configService.get('NODE_ENV') + ' environment.\nReason: ' + error + '\n\n')})
+          console.log('\nError!\nCannot connect to ELK server on ' + ENV + ' environment.\nReason: ' + error + '\n\n')})
   }
 
   async CreateDoctorIndex() : Promise<CustomResponse> {  

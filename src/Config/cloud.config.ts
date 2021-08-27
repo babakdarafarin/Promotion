@@ -10,7 +10,8 @@ export class CloudConfig implements ElasticsearchOptionsFactory{
   
   createElasticsearchOptions(): ClientOptions | Promise<ClientOptions> {
     //change to config.get TODO
-    if(process.argv[2] == 'production')
+    let ENV = process.argv[2] ? process.argv[2] : process.env.NODE_ENV
+    if(ENV == 'production')
     {
       return this.configService.get('cloudConnectionInformation')
     }
