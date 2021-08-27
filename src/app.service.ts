@@ -11,7 +11,7 @@ export class AppService {
     private readonly elasticsearchService: ElasticsearchService,
     private configService : ConfigService
   ) {
-        //change to async TODO   
+        //change to async await TODO   
         this.elasticsearchService.ping({},{requestTimeout: 3000})
         .then(() => {
           console.log('\n' + this.configService.get('NODE_ENV') +  ' db connected!\n')
