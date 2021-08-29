@@ -21,7 +21,7 @@ export class AppService {
           console.log('\nError!\nCannot connect to ELK server on ' + ENV + ' environment.\nReason: ' + error + '\n\n')})
   }
 
-  async CreateDoctorIndex() : Promise<CustomResponse> {  
+  async CreateDoctorIndex() : Promise<CustomResponse> {
     
     const indexExistence = await this.elasticsearchService.indices.exists({index: 'doctors'})
     if(indexExistence.body)
