@@ -2,7 +2,7 @@ require('dotenv').config(); //delete env usage, TODO
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
-import { ExceptionFilter } from '../Filters/RPCExceptionFilter';
+import { ExceptionFilter } from '../filters/RPCExceptionFilter';
 
 async function bootstrap() {
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(AppModule, {
