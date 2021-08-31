@@ -1,13 +1,11 @@
-import { ClientOptions } from "@elastic/elasticsearch";
 import { Injectable } from "@nestjs/common";
 import { ConfigService } from '@nestjs/config'
-import { ElasticsearchOptionsFactory } from "@nestjs/elasticsearch";
+import { MongooseModuleOptions, MongooseOptionsFactory } from "@nestjs/mongoose";
 
 @Injectable()
-export class CloudConfig implements ElasticsearchOptionsFactory{
+export class CloudConfig implements MongooseOptionsFactory{
     constructor(private configService : ConfigService){}
-  
-  createElasticsearchOptions(): ClientOptions | Promise<ClientOptions> {
+  createMongooseOptions(): MongooseModuleOptions | Promise<MongooseModuleOptions> {
     //change to config.get TODO
     let ENV = process.argv[2] ? process.argv[2] : process.env.NODE_ENV
     if(ENV == 'production')

@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { ElasticsearchModule } from '@nestjs/elasticsearch'
+import { MongooseModule } from '@nestjs/mongoose';
 import { config } from './Config/config';
 import { CloudConfig } from './Config/cloud.config'
 
@@ -16,7 +16,7 @@ let ENV = process.argv[2] ? process.argv[2] : process.env.NODE_ENV
       isGlobal:true,
       load: [config]
     }),
-    ElasticsearchModule.registerAsync({
+    MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useClass: CloudConfig,
       inject: [ConfigService],
@@ -25,3 +25,6 @@ let ENV = process.argv[2] ? process.argv[2] : process.env.NODE_ENV
   providers: [AppService],
 })
 export class AppModule {}
+
+
+
