@@ -72,14 +72,13 @@ export class ReferralCodeService {
 
     //i cannot invite myself!
     //i cannot get credit from other user more than once!
-    //TODO
     async UseReferralCode(referralCodeUsageInfoDto : ReferralCodeUsageInfoDto) : Promise<CustomResponse> {
         const user = await this.usersService.findUserById(referralCodeUsageInfoDto.userId)
         const referrer = await this.usersService.findUserByReferralCode(referralCodeUsageInfoDto.referralCode)
 
-        if(!user || !referrer){
+        if(!user || !referrer || user.userId == referrer.userId || user._id == referrer._id || user.referrerId == referrer._id){
             return new CustomResponse(
-                'User/ReferrerCode Does Not Exist!',
+                'Not Allowed!',
                 false,
                 {}
             )
