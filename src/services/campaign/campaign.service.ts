@@ -86,7 +86,7 @@ export class CampaignService {
             maxDiscountAmount : campaign.pricingStrategy.maxDiscountAmount,
             regionGroups : campaign.pricingStrategy.regionGroups 
         })
-        newPricingStrategy.save()
+        await newPricingStrategy.save()
 
         //messaging strategies
         let newMessagingStrategies: MessagingStrategy[] = []
@@ -125,7 +125,7 @@ export class CampaignService {
             messagingStrategiesNames: newMessagingStrategies.map((messagingStrategy) => (messagingStrategy.name)),
             identityId: newCampaign.id
         })
-        newCampaignSummary.save()
+        await newCampaignSummary.save()
    
         return new CustomResponse(
             'Target Campaign Created!',
@@ -146,49 +146,83 @@ export class CampaignService {
     //join on groups, 
     async GetCampaignDetails(campaignSummaryId: string) : Promise<CustomResponse> {
         const campaignSummary: CampaignSummary = await this.campaignSummaryModel.findById(campaignSummaryId)
-        const campaign = new CampaignDto
-        
-        campaign.identity = await this.campaignIdentityModel.findById(campaignSummary.identityId)
 
-        //convert to join
-        campaign.customerGroups = await this.userGroupModel.find({ _id: { $in: campaignSummary.customerGroupsIds }})
-        campaign.productGroups = await this.productGroupModel.find({ _id: { $in: campaignSummary.productGroupsIds }})
+        if(!campaignSummary || campaignSummary.isDeleted){
+            return new CustomResponse(
+                'Target Campaign Was Not Found(Deleted Maybe)!',
+                false,
+                {}
+            )
+        }
+        else{
+            const campaign = new CampaignDto
         
-        campaign.pricingStrategy = await this.pricingStrategyModel.findById(campaignSummary.pricingStrategyId)
-        
-        campaign.messagingStrategies = await this.messagingStrategyModel.find({ _id: { $in: campaignSummary.messagingStrategiesIds }})
+            campaign.identity = await this.campaignIdentityModel.findById(campaignSummary.identityId)
 
-        return new CustomResponse(
-            'Target Campaign Details Listed!',
-            true,
-            campaign
-        )
+            //convert to join
+            campaign.customerGroups = await this.userGroupModel.find({ _id: { $in: campaignSummary.customerGroupsIds }})
+            campaign.productGroups = await this.productGroupModel.find({ _id: { $in: campaignSummary.productGroupsIds }})
+            
+            campaign.pricingStrategy = await this.pricingStrategyModel.findById(campaignSummary.pricingStrategyId)
+            
+            campaign.messagingStrategies = await this.messagingStrategyModel.find({ _id: { $in: campaignSummary.messagingStrategiesIds }})
+
+            return new CustomResponse(
+                'Target Campaign\' Details Listed!',
+                true,
+                campaign
+            )
+        }
     }
 
     async ChangeActivity(campaignSummaryId: string) : Promise<CustomResponse> {
         const campaignSummary: CampaignSummary = await this.campaignSummaryModel.findById(campaignSummaryId)
-        
-        campaignSummary.isActive = !campaignSummary.isActive
-        await campaignSummary.save()
 
-        return new CustomResponse(
-            'Activity Status Changed!',
-            true,
-            {}
-        )
+        if(!campaignSummary || campaignSummary.isDeleted){
+            return new CustomResponse(
+                'Target Campaign Was Not Found(Deleted Maybe)!',
+                false,
+                {}
+            )
+        }
+        else{
+            campaignSummary.isActive = !campaignSummary.isActive
+            await campaignSummary.save()
+    
+            return new CustomResponse(
+                'Campaign\'s Activity Status Changed!',
+                true,
+                {
+                    activityStatus : campaignSummary.isActive
+                }
+            )
+        }
     }
 
     async RemoveCampaign(campaignSummaryId: string) : Promise<CustomResponse> {
-        const summary = await this.campaignSummaryModel.findById(campaignSummaryId)
-        summary.isDeleted = true
-        summary.isActive = false
-        summary.save()
+        const campaignSummary: CampaignSummary = await this.campaignSummaryModel.findById(campaignSummaryId)
 
-        return new CustomResponse(
-            'Target Campaign Deleted!',
-            true,
-            {}
-        )
+        if(!campaignSummary || campaignSummary.isDeleted){
+            return new CustomResponse(
+                'Target Campaign Was Not Found(Deleted Maybe)!',
+                false,
+                {}
+            )
+        }
+        else{
+            campaignSummary.isDeleted = true
+            campaignSummary.isActive = false
+            await campaignSummary.save()
+    
+            return new CustomResponse(
+                'Target Campaign Is Deleted!',
+                true,
+                {}
+            )
+        }
+        
+
+        
     }
 }
 

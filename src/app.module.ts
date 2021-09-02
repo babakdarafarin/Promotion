@@ -10,6 +10,7 @@ import { CampaignModule } from './services/campaign/campaign.module';
 import { DiscountCodeModule } from './services/discount-code/discount-code.module';
 import { PriceCalculatorModule } from './services/price-calculator/price-calculator.module';
 import { ReferralCodeModule } from './services/referral-code/referral-code.module';
+import { UserModule } from './services/user/user.module';
 
 let ENV = process.argv[2] ? process.argv[2] : process.env.NODE_ENV
 
@@ -21,6 +22,7 @@ let ENV = process.argv[2] ? process.argv[2] : process.env.NODE_ENV
     DiscountCodeModule,
     PriceCalculatorModule,
     ReferralCodeModule,
+    UserModule,
     ConfigModule.forRoot({
       envFilePath: !ENV ? '.env' : `environments/.env.${ENV}`,
       isGlobal:true,

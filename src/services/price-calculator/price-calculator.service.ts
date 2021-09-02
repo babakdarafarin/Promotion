@@ -7,6 +7,7 @@ import { UserGroup } from '../../../models/user-group.model'
 import { ProductGroup } from '../../../models/product-group.model'
 import { PricingStrategy } from '../../../models/pricing-strategy.model';
 import { DiscountCodeSummary } from '../../../models/discount-code-summary.model'
+import { CustomResponse } from 'src/response/custom-response'
 
 
 @Injectable()
@@ -17,11 +18,9 @@ export class PriceCalculatorService {
         @InjectModel('ProductGroup') private readonly productGroupModel: Model<ProductGroup>,
         @InjectModel('PricingStrategy') private readonly pricingStrategyModel: Model<PricingStrategy>,
         @InjectModel('DiscountCodeSummary') private readonly discountCodeSummaryModel: Model<DiscountCodeSummary>,
-    ){
+    ){}
 
-    }
-
-    async CalculateReducedPrices(ToBeCalculated: PriceCalculatorDto[]){
+    async CalculateReducedPrices(ToBeCalculated: PriceCalculatorDto[]) : Promise<CustomResponse> {
 
         for(let tempEntry of ToBeCalculated)
         {
@@ -33,8 +32,11 @@ export class PriceCalculatorService {
                 )    
         }
 
-
-        return ToBeCalculated
+        return new CustomResponse(
+            'Reduced Prices Calculated!',
+            true,
+            ToBeCalculated
+        )
     }
 
     //Test!!!!!
@@ -188,5 +190,4 @@ export class PriceCalculatorService {
 
         return reducedPrice
     }
-
 }

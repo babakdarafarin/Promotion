@@ -4,72 +4,145 @@ import { InjectModel } from "@nestjs/mongoose";
 //import { UserService } from '../user/user.service' ????????
 import { ReferralCodeSettingDto } from './Dtos/referral-code-setting.dto';
 import { ReferralCodeSetting } from '../../..//models/referral-code-setting.model';
+import { UserService } from '../user/user.service';
+import { CustomResponse } from 'src/response/custom-response';
+import { ReferralCodeUsageInfoDto } from './Dtos/referral-code-usage-info.dto';
 
 @Injectable()
 export class ReferralCodeService {
     constructor(
-        // private usersService: UserService, ????????????????????????
-        @InjectModel('ReferralCodeSetting') private readonly referralCodeSettingModel: Model<ReferralCodeSetting>,
+        private usersService: UserService,
+        @InjectModel('ReferralCodeSetting') private readonly referralCodeSettingModel: Model<ReferralCodeSetting>
         ) {}
     
-    // async CreateReferralCode(userId: string): Promise<String>{
+    async CreateReferralCode(userId: string): Promise<CustomResponse>{
+        const user = await this.usersService.findUserById(userId)
+
+        if(!user){
+            return new CustomResponse(
+                'User Does Not Exist!',
+                false,
+                {}
+            )
+        }
+        else{
+            if(!user.referralCode || user.referralCode === 'DELETED')
+            {
+                const code = await this.GenerateReferralCode(user.userId)
+                
+                user.referralCode = String(code)
+                await user.save()
+
+                return new CustomResponse(
+                    'Referral Code Created!',
+                    true,
+                    code
+                )
+            }
+
+            return new CustomResponse(
+                'Referral Code Created!',
+                true,
+                user.referralCode
+            )
+        }
+    }
+
+    async RemoveReferralCode(userId: string) : Promise<CustomResponse> {
+        const user = await this.usersService.findUserById(userId)
         
-    //     console.log(userId)
+        if(!user){
+            return new CustomResponse(
+                'User Does Not Exist!',
+                false,
+                {}
+            )
+        }
+        else{
+            user.referralCode = 'DELETED'
+            await user.save()
 
-    //     const user = await this.usersService.findUserById(userId)
+            return new CustomResponse(
+                'Referral Code Is Removed!',
+                true,
+                {}
+            )
+        }
+    }
 
-    //     if(!user.referralCode || user.referralCode === 'DELETED')
-    //     {
-    //         const code = await this.GenerateReferralCode(user.username)
-            
-    //         user.referralCode = String(code)
-    //         await user.save()
+    //i cannot invite myself!
+    //i cannot get credit from other user more than once!
+    //TODO
+    async UseReferralCode(referralCodeUsageInfoDto : ReferralCodeUsageInfoDto) : Promise<CustomResponse> {
+        const user = await this.usersService.findUserById(referralCodeUsageInfoDto.userId)
+        const referrer = await this.usersService.findUserByReferralCode(referralCodeUsageInfoDto.referralCode)
 
-    //         return code
-    //     }
+        if(!user || !referrer){
+            return new CustomResponse(
+                'User/ReferrerCode Does Not Exist!',
+                false,
+                {}
+            )
+        }
 
-    //     return user.referralCode
-    // }
+        const activeReferralCodeSetting = await this.referralCodeSettingModel.findOne( { isActive : true } )
 
-    // async RemoveReferralCode(userId: string){
-    //     const user = await this.usersService.findUserById(userId)
-        
-    //     user.referralCode = 'DELETED'
-    //     user.save()
-    // }
+        if(!activeReferralCodeSetting){
+            return new CustomResponse(
+                'Active Referral Code Setting Does Not Exist!',
+                false,
+                {}
+            )
+        }
 
-    // async UseReferralCode(userId: string, referralCode: string){
-    //     const user = await this.usersService.findUserById(userId)
-    //     const referrer = await this.usersService.findUserByReferralCode(referralCode)
-    //     const activeReferralCodeSetting = await this.referralCodeSettingModel.findOne( { isActive : true} )
+        user.referrerId = referrer.id
+        user.credit += activeReferralCodeSetting.value
+        referrer.referrals.push(String(user.id))
 
-    //     user.referrerId = referrer.id
-    //     user.credit += activeReferralCodeSetting.value
-    //     referrer.referrals.push(String(user.id))
+        await user.save()        
+        await referrer.save()
 
-    //     await user.save()        
-    //     await referrer.save()
+        return new CustomResponse(
+            'Referral Code Is Used!',
+            true,
+            {}
+        )
+    }
 
-    //     return true
-    // }
-
-    async AddRefferalCodeSetting(referralCodeSettingDto : ReferralCodeSettingDto){
+    async AddRefferalCodeSetting(referralCodeSettingDto : ReferralCodeSettingDto) : Promise<CustomResponse> {
         const newReferralCodeSetting = new this.referralCodeSettingModel({
             name : referralCodeSettingDto.name,
             value : referralCodeSettingDto.value
         })
         await newReferralCodeSetting.save()
 
-        return newReferralCodeSetting.id
+        return new CustomResponse(
+            'Referral Code Setting Created!',
+            true,
+            newReferralCodeSetting.id
+        )
     }
 
-    async GetReferralCodeSettings(){
-        return await this.referralCodeSettingModel.find( { isDeleted : false })
+    async GetReferralCodeSettings() : Promise<CustomResponse> {
+        return new CustomResponse(
+            'Referral Code Settings Listed!',
+            true,
+            await this.referralCodeSettingModel.find( { isDeleted : false })
+        )
     }
 
-    async ChaneReferralCodeSettingsActivity(referralCodeSettingId : string){
+    async ChaneReferralCodeSettingsActivity(referralCodeSettingId : string) : Promise<CustomResponse> {
         const referralCodeSetting: ReferralCodeSetting = await this.referralCodeSettingModel.findById(referralCodeSettingId)
         
+        if(!referralCodeSetting)
+        {
+            return new CustomResponse(
+                'Referral Code Setting Does Not Exist!',
+                false,
+                {}
+            )
+        }
+
         if(!referralCodeSetting.isActive){
             await this.referralCodeSettingModel.bulkWrite([{
                 updateMany:
@@ -84,19 +157,42 @@ export class ReferralCodeService {
         referralCodeSetting.isActive = !referralCodeSetting.isActive
         await referralCodeSetting.save()
 
-        return true
+        return new CustomResponse(
+            'Referral Code Setting Activity Status Changed!',
+            true,
+            {
+                activityStatus : referralCodeSetting.isActive
+            }
+        )
     }
 
-    private async GenerateReferralCode(username: string): Promise<String>{
-        const generatedCode = username + '$12$' + "@GH#%^"
+    async RemoveReferralCodeSetting(referralCodeSettingId: string) : Promise<CustomResponse> {
+        const referralCodeSetting = await this.referralCodeSettingModel.findById(referralCodeSettingId)
+        
+        if(!referralCodeSetting)
+        {
+            return new CustomResponse(
+                'Referral Code Setting Does Not Exist!',
+                false,
+                {}
+            )
+        }
+        
+        referralCodeSetting.isDeleted = true
+        referralCodeSetting.isActive = false
+        await referralCodeSetting.save()
+
+        return new CustomResponse(
+            'Referral Code Setting Is Removed!',
+            true,
+            {}
+        )
+    }
+
+    //create real generator TODO
+    private async GenerateReferralCode(userId: string): Promise<String>{
+        const generatedCode = userId + '$12$' + "@GH#%^"
 
         return generatedCode
-    }
-
-    async RemoveReferralCodeSetting(referralCodeSettingId: string){
-        const setting = await this.referralCodeSettingModel.findById(referralCodeSettingId)
-        setting.isDeleted = true
-        setting.isActive = false
-        setting.save()
     }
 }

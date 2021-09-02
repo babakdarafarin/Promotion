@@ -7,6 +7,7 @@ import { PricingStrategy } from '../../../models/pricing-strategy.model'
 import { Region } from '../../../models/region.model'
 import { RegionGroup } from '../../../models/region-group.model'
 import { RegionGroupDto } from './Dtos/region-group.dto'
+import { CustomResponse } from 'src/response/custom-response'
 
 @Injectable()
 export class CommonService {
@@ -19,55 +20,94 @@ export class CommonService {
     ){}
     
 
-    async GetUserGroups()
-    {
-        return await this.userGroupModel.find()
+    async GetUserGroups() : Promise<CustomResponse> {        
+        return new CustomResponse(
+            'User Groups Listed!',
+            true,
+            await this.userGroupModel.find()
+        )
     }
 
-    async RemoveUserGroup(userGroupId: string){
+    //soft remove? TODO
+    async RemoveUserGroup(userGroupId: string) : Promise<CustomResponse> {
         await this.userGroupModel.findByIdAndDelete(userGroupId)
+        return new CustomResponse(
+            'User Group Removed!',
+            true,
+            {}
+        )
     }
 
-    async GetProductGroups()
-    {
-        return await this.productGroupModel.find()
+    async GetProductGroups() : Promise<CustomResponse> {
+        return new CustomResponse(
+            'Product Groups Listed!',
+            true,
+            await this.productGroupModel.find()
+        )
     }
 
-    async RemoveProductGroup(productGroupId: string){
+    async RemoveProductGroup(productGroupId: string) : Promise<CustomResponse> {
         await this.productGroupModel.findByIdAndDelete(productGroupId)
+        return new CustomResponse(
+            'Product Group Removed!',
+            true,
+            {}
+        )
     }
 
-    async GetPricingStrategies()
-    {
-        return await this.pricingStrategyModel.find()
+    async GetPricingStrategies() : Promise<CustomResponse> {
+        return new CustomResponse(
+            'Pricing Strategies Listed!',
+            true,
+            await this.pricingStrategyModel.find()
+        )
     }
 
-    async RemovePricingStrategy(pricingStrategyId: string){
-        return await this.pricingStrategyModel.findByIdAndRemove(pricingStrategyId)
+    async RemovePricingStrategy(pricingStrategyId: string) : Promise<CustomResponse> {
+        await this.pricingStrategyModel.findByIdAndRemove(pricingStrategyId)
+        return new CustomResponse(
+            'Pricing Strategy Removed!',
+            true,
+            {}
+        )
     }
 
-    async GetRegions()
-    {
-        return await this.regionModel.find()
+    async GetRegions() : Promise<CustomResponse> {
+        return new CustomResponse(
+            'Regions Listed!',
+            true,
+            await this.regionModel.find()
+        )
     }
 
-    async GetRegionGroups()
-    {
-        return await this.regionGroupModel.find()
-    }
-
-    async CreateRegionGroup(regionGroup : RegionGroupDto)
-    {
+    async CreateRegionGroup(regionGroup : RegionGroupDto) : Promise<CustomResponse> {
         const newRegionGroup = new this.regionGroupModel({
             name: regionGroup.name,
             regionsList : regionGroup.regionsList
         })
-        newRegionGroup.save()
+        await newRegionGroup.save()
         
-        return newRegionGroup.id
+        return new CustomResponse(
+            'Region Group Created!',
+            true,
+            newRegionGroup.id
+        )
     }
 
-    async RemoveRegionGroup(regionGroupId: string){
-        return this.regionGroupModel.findByIdAndRemove(regionGroupId)
+    async GetRegionGroups() : Promise<CustomResponse> {
+        return new CustomResponse(
+            'Region Groups Listed!',
+            true,
+            await this.regionGroupModel.find()
+        )
+    }
+
+    async RemoveRegionGroup(regionGroupId: string) : Promise<CustomResponse> {
+        await this.regionGroupModel.findByIdAndRemove(regionGroupId)
+        return new CustomResponse(
+            'Region Group Deleted!',
+            true,
+            {}
+        )
     }
 }

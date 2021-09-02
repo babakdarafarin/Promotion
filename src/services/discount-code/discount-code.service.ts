@@ -7,6 +7,7 @@ import { ProductGroup } from '../../../models/product-group.model'
 import { PricingStrategy } from '../../../models/pricing-strategy.model'
 import { DiscountCodeSummary } from '../../../models/discount-code-summary.model';
 import { DiscountCodeDto } from './Dtos/discount-code.dto';
+import { CustomResponse } from 'src/response/custom-response';
 
 @Injectable()
 export class DiscountCodeService {
@@ -18,7 +19,7 @@ export class DiscountCodeService {
         @InjectModel('DiscountCodeSummary') private readonly discountCodeSummaryModel: Model<DiscountCodeSummary>,
     ){}
 
-    async AddDiscountCode(discountcode: DiscountCodeDto){
+    async AddDiscountCode(discountcode: DiscountCodeDto) : Promise<CustomResponse> {
 
         //add discount identity, 
         const newDiscountCode = new this.discountCodeIdentityModel({
@@ -27,7 +28,7 @@ export class DiscountCodeService {
             startDate: new Date(discountcode.identity.startDate),
             endDate: new Date(discountcode.identity.endDate),
         })
-        newDiscountCode.save()
+        await newDiscountCode.save()
 
         //add customer group
         const newUserGroup = new this.userGroupModel({
@@ -35,7 +36,7 @@ export class DiscountCodeService {
             description: discountcode.customerGroup.description,
             userIds: discountcode.customerGroup.userIds
         })
-        newUserGroup.save()
+        await newUserGroup.save()
 
         //add product group
         const newProductGroup = new this.productGroupModel({
@@ -43,7 +44,7 @@ export class DiscountCodeService {
             description: discountcode.productGroup.description,
             productIds: discountcode.productGroup.productIds
         })
-        newProductGroup.save()
+        await newProductGroup.save()
 
         //add pricing strategy
         const newPricingStrategy = new this.pricingStrategyModel({
@@ -55,7 +56,7 @@ export class DiscountCodeService {
             maxDiscountAmount : discountcode.pricingStrategy.maxDiscountAmount,
             regionGroups : discountcode.pricingStrategy.regionGroups 
         })
-        newPricingStrategy.save()
+        await newPricingStrategy.save()
 
         //add summary in the collection
         const newDiscountSummary = new this.discountCodeSummaryModel({
@@ -71,51 +72,102 @@ export class DiscountCodeService {
             pricingStrategyName:  newPricingStrategy.name,
             identityId: newDiscountCode.id
         })
-        newDiscountSummary.save()
+        await newDiscountSummary.save()
 
-        return newDiscountSummary.id
+        return new CustomResponse(
+            'Discount Code Created!',
+            true,
+            await newDiscountSummary.id
+        )
     }
 
-    async GetDiscountCodesSummaries(){
-        return await this.discountCodeSummaryModel.find( { isActive : false } )
+    async GetDiscountCodesSummaries() : Promise<CustomResponse> {
+        return new CustomResponse(
+            'Discount Code Summaries Listed!',
+            true,
+            await this.discountCodeSummaryModel.find( { isDeleted : false } )
+        )
     }
         
     //convert to union TODO - SingleQuery
     //join on groups, 
-    async GetDiscountCodeDetails(discountCodeSummaryId: string)
-    {
-        const discountCodeSummary: DiscountCodeSummary = await this.discountCodeSummaryModel.findById(discountCodeSummaryId)
-        const discountCode = new DiscountCodeDto
-
-        discountCode.identity = {} as DiscountCodeIdentity
-        
-        discountCode.identity.code = discountCodeSummary.code
-        discountCode.identity.description = discountCodeSummary.description
-        discountCode.identity.startDate = discountCodeSummary.startDate
-        discountCode.identity.endDate = discountCodeSummary.endDate
-
-        //convert to join
-        discountCode.customerGroup = await this.userGroupModel.findById(discountCodeSummary.customerGroupId)
-        discountCode.productGroup = await this.productGroupModel.findById(discountCodeSummary.productGroupId)
-        discountCode.pricingStrategy = await this.pricingStrategyModel.findById(discountCodeSummary.pricingStrategyId)
-
-        return discountCode
-    }
-
-    async ChangeActivity(discountCodeSummaryId: string)
-    {
+    async GetDiscountCodeDetails(discountCodeSummaryId: string) : Promise<CustomResponse> {
         const discountCodeSummary: DiscountCodeSummary = await this.discountCodeSummaryModel.findById(discountCodeSummaryId)
         
-        discountCodeSummary.isActive = !discountCodeSummary.isActive
-        await discountCodeSummary.save()
+        if(!discountCodeSummary || discountCodeSummary.isDeleted){
+            return new CustomResponse(
+                'Target Discount Code Was Not Found(Deleted Maybe)!',
+                false,
+                {}
+            )
+        }
+        else{
+            const discountCode = new DiscountCodeDto
 
-        return true
+            discountCode.identity = {} as DiscountCodeIdentity
+            
+            discountCode.identity.code = discountCodeSummary.code
+            discountCode.identity.description = discountCodeSummary.description
+            discountCode.identity.startDate = discountCodeSummary.startDate
+            discountCode.identity.endDate = discountCodeSummary.endDate
+
+            //convert to join
+            discountCode.customerGroup = await this.userGroupModel.findById(discountCodeSummary.customerGroupId)
+            discountCode.productGroup = await this.productGroupModel.findById(discountCodeSummary.productGroupId)
+            discountCode.pricingStrategy = await this.pricingStrategyModel.findById(discountCodeSummary.pricingStrategyId)
+
+            return new CustomResponse(
+                'Target Discount Code\'s Details Listed!',
+                true,
+                discountCode
+            )
+        }
     }
 
-    async RemoveDiscountCode(discountCodeSummaryId: string){
-        const summary = await this.discountCodeSummaryModel.findById(discountCodeSummaryId)
-        summary.isDeleted = true
-        summary.isActive = false
-        summary.save()
+    async ChangeActivity(discountCodeSummaryId: string) : Promise<CustomResponse> {
+        const discountCodeSummary: DiscountCodeSummary = await this.discountCodeSummaryModel.findById(discountCodeSummaryId)
+        
+        if(!discountCodeSummary || discountCodeSummary.isDeleted){
+            return new CustomResponse(
+                'Target Discount Code Was Not Found(Deleted Maybe)!',
+                false,
+                {}
+            )
+        }
+        else{
+            discountCodeSummary.isActive = !discountCodeSummary.isActive
+            await discountCodeSummary.save()
+
+            return new CustomResponse(
+                'Discount Code\'s Activity Status Changed!',
+                true,
+                {
+                    activityStatus : discountCodeSummary.isActive
+                }
+            )
+        }
+    }
+
+    async RemoveDiscountCode(discountCodeSummaryId: string) : Promise<CustomResponse> {
+        const discountCodeSummary: DiscountCodeSummary = await this.discountCodeSummaryModel.findById(discountCodeSummaryId)
+
+        if(!discountCodeSummary || discountCodeSummary.isDeleted){
+            return new CustomResponse(
+                'Target Discount Code Was Not Found(Deleted Maybe)!',
+                false,
+                {}
+            )
+        }
+        else{
+            discountCodeSummary.isDeleted = true
+            discountCodeSummary.isActive = false
+            await discountCodeSummary.save()
+
+            return new CustomResponse(
+                'Target Discount Code Is Deleted!',
+                true,
+                {}
+            )
+        }
     }
 }

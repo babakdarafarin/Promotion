@@ -15,29 +15,27 @@ export class CampaignController {
         return await this.campaignService.AddCampaign(campaign)
     }
 
-    // //delete fields
-    // @Get()
-    // async GetCampaignsSummaries()
-    // {
-    //     return await this.campaignService.GetCampaignsSummaries()
-    // }
+    //delete fields TODO
+    @EventPattern('campaign.get_summaries')
+    async GetCampaignsSummaries() : Promise<CustomResponse> {
+        return await this.campaignService.GetCampaignsSummaries()
+    }
 
-    // //delete fields
-    // @Get(':id')
-    // async GetCampaignDetails(@Param('id') campaignSummaryId: string)
-    // {
-    //     return await this.campaignService.GetCampaignDetails(campaignSummaryId)
-    // }
+    //delete fields TODO
+    @EventPattern('campaign.get_details')
+    async GetCampaignDetails(@Payload() campaignSummaryId: string) : Promise<CustomResponse> {
+        return await this.campaignService.GetCampaignDetails(campaignSummaryId)
+    }
 
-    // @Get('changeactivity/:id')
-    // async ChangeActivity(@Param('id') campaignSummaryId: string)
-    // {
-    //     return await this.campaignService.ChangeActivity(campaignSummaryId)
-    // }
+    @EventPattern('campaign.change_activity')
+    async ChangeActivity(@Payload() campaignSummaryId: string): Promise<CustomResponse>
+    {
+        return await this.campaignService.ChangeActivity(campaignSummaryId)
+    }
 
-    // @Delete(':id') // delete from summary as well
-    // async RemoveCampaign(@Param('id') campaignSummaryId: string)
-    // {
-    //     return await this.campaignService.RemoveCampaign(campaignSummaryId)
-    // }
+    @EventPattern('campaign.remove') // delete from summary as well
+    async RemoveCampaign(@Payload() campaignSummaryId: string)
+    {
+        return await this.campaignService.RemoveCampaign(campaignSummaryId)
+    }
 }
